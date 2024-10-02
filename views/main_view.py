@@ -42,27 +42,19 @@ class MainView:
 
     def build_ui(self):
         # Добавим стиль для ttk
-        style = ttk.Style()
-        style.configure('TLabel', font=('Arial', 16), padding=10)
-        style.configure('TButton', font=('Arial', 16), padding=10)
-        style.configure('TCombobox', font=('Arial', 16), padding=5)
-
         # Фрейм для фильтров
         filter_frame = tk.Frame(self.root, bg='#f0f0f0')  # Добавим фоновый цвет
-        filter_frame.pack(pady=20, padx=20)
+        filter_frame.pack(pady=20, padx=20, fill=tk.X)  # Расширим по оси X
 
         # Создаем Combobox для выбора типа телосложения
         self.body_type_var = tk.StringVar(value="астеник")
         body_type_combobox = ttk.Combobox(filter_frame, textvariable=self.body_type_var,
                                           values=["астеник", "нормостеник", "гиперстеник"], state="readonly")
-        body_type_combobox.grid(row=0, column=1, padx=10, pady=5, sticky='w')
+        body_type_combobox.grid(row=0, column=0, padx=10, pady=5, sticky='w')  # Размещаем на первой позиции
 
-        # Привязываем метод загрузки изображений к изменению выбора
-        body_type_combobox.bind("<<ComboboxSelected>>", lambda event: self.load_reference_images())
-
-        # Кнопка для начала трансляции
+        # Кнопка для начала трансляции, расположенная справа от Combobox
         start_button = ttk.Button(filter_frame, text="Начать трансляцию", command=self.start_stream, takefocus=False)
-        start_button.grid(row=3, column=0, columnspan=2, pady=20)
+        start_button.grid(row=0, column=1, padx=10, pady=5, sticky='w')  # Размещаем на второй позиции в той же строке
 
         main_frame = tk.Frame(self.root)
         main_frame.pack(fill=tk.BOTH, expand=True)
