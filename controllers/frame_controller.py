@@ -1,7 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 
 
-def add_frame_mask(img, mask_path, active_position, alpha_value=0.5, scale_factor=0.5):
+def add_frame_mask(img, mask_path, active_position, alpha_value=0.5, scale_factor=0.5, pos_x=0, pos_y=50):
     """
     Накладывает маску и добавляет полосу с кнопками сверху, где активная позиция будет обёрнута зелёной рамкой.
     :param img: Исходное изображение
@@ -9,6 +9,8 @@ def add_frame_mask(img, mask_path, active_position, alpha_value=0.5, scale_facto
     :param active_position: Индекс активной позиции для выделения
     :param alpha_value: Значение прозрачности
     :param scale_factor: Коэффициент изменения размера маски
+    :param pos_x: Позиция маски по X
+    :param pos_y: Позиция маски по Y
     :return: Изображение с наложенной маской и кнопками
     """
     # Загрузка маски
@@ -18,27 +20,23 @@ def add_frame_mask(img, mask_path, active_position, alpha_value=0.5, scale_facto
     mask_width, mask_height = mask_img.size
     new_width = int(mask_width * scale_factor)
     new_height = int(mask_height * scale_factor)
-    mask_img = mask_img.resize((new_width, new_height), Image.LANCZOS)
+    mask_img = mask_img.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
     # Изменяем прозрачность маски
     mask_img = reduce_transparency(mask_img, alpha_value)
 
     # Накладываем маску на изображение
     img_with_frame = img.convert("RGBA")
-    img_width, img_height = img.size
 
-    # Центрируем маску
-    # position = ((img_width - new_width) // 2, (img_height - new_height) // 2)
-    # img_with_frame.paste(mask_img, position, mask_img)
-
-    # Центрируем маску по горизонтали и размещаем по верхнему краю по вертикали
-    position = ((img_width - new_width) // 2, 50)  # '0' для верхнего края
+    # Используем переданные позиции по X и Y для размещения маски
+    position = (pos_x, pos_y)
     img_with_frame.paste(mask_img, position, mask_img)
 
     # Добавляем полупрозрачную маску в верхней части изображения и кнопки
     img_with_frame = add_privacy_mask_with_buttons(img_with_frame, active_position, height=50)
 
     return img_with_frame.convert("RGB")
+
 
 
 def add_privacy_mask_with_buttons(img, active_position, height=50, color=(0, 0, 0, 128)):

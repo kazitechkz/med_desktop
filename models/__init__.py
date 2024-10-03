@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Enum, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Enum, ForeignKey, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 import os
@@ -22,6 +22,9 @@ class BodyType(Base):
     id = Column(Integer, primary_key=True)
     name = Column(Enum('asthenic', 'normosthenic', 'hypersthenic'), nullable=False)
 
+    # Связь с таблицей reference_images
+    reference_images = relationship('ReferenceImage', back_populates='body_type')
+
 
 # Определение модели для эталонных изображений
 class ReferenceImage(Base):
@@ -31,6 +34,7 @@ class ReferenceImage(Base):
     body_type_id = Column(Integer, ForeignKey('body_type.id'), nullable=False)
     position = Column(Enum('PLAX', 'PSAX', 'A4C', 'A2C', 'A3C', 'subcostal', 'suprasternal'), nullable=False)
     image_path = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)  # Добавляем поле для описания позиции
 
     body_type = relationship('BodyType', back_populates='reference_images')
 

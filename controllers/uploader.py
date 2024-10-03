@@ -1,8 +1,12 @@
-import requests
-import os
-from datetime import datetime
 import asyncio
-import aiohttp
+import os
+import threading
+from datetime import datetime
+from random import randint
+
+import requests
+
+from controllers.screen_controller import capture_screen
 
 
 def save_screenshot(img):
@@ -17,17 +21,18 @@ def save_screenshot(img):
 
 
 async def upload_screenshot_async(file_path):
-    """Асинхронная загрузка скриншота на сервер."""
-    url = 'http://localhost:5000/upload'
-    try:
-        async with aiohttp.ClientSession() as session:
-            with open(file_path, 'rb') as f:
-                files = {'file': f}
-                async with session.post(url, data=files) as response:
-                    return await response.text()
-    except Exception as e:
-        print(f"Ошибка при отправке: {e}")
-        return False
+    return f"{randint(50, 100)} %"
+    # """Асинхронная загрузка скриншота на сервер."""
+    # url = 'http://localhost:5000/upload'
+    # try:
+    #     async with aiohttp.ClientSession() as session:
+    #         with open(file_path, 'rb') as f:
+    #             files = {'file': f}
+    #             async with session.post(url, data=files) as response:
+    #                 return await response.text()
+    # except Exception as e:
+    #     print(f"Ошибка при отправке: {e}")
+    #     return False
 
 
 def upload_screenshot_sync(file_path):
@@ -40,3 +45,6 @@ def upload_screenshot_sync(file_path):
     except Exception as e:
         print(f"Ошибка при отправке: {e}")
         return False
+
+
+

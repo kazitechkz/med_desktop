@@ -13,4 +13,4 @@ class Database:
             .filter(BodyType.name == body_type)
             .all()
         )
-        return [(image.position, image.image_path) for image in reference_images]
+        return [(image.position, image.image_path, image.description) for image in reference_images]
