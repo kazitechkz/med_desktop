@@ -1,7 +1,7 @@
 from models import session, BodyType, ReferenceImage
 
 
-def seed_body_types():
+def seed_body_types(session):
     """Заполняем таблицу body_type начальными данными"""
     body_types = [
         BodyType(name='asthenic'),
@@ -14,7 +14,7 @@ def seed_body_types():
     print("Таблица body_type заполнена данными.")
 
 
-def seed_reference_images():
+def seed_reference_images(session):
     """Заполняем таблицу reference_images начальными данными"""
 
     # Получаем записи из таблицы body_type

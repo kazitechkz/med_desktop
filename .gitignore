@@ -1,3 +1,5 @@
 screens/
 venv/
 assets/screenshots/
+build/
+dist/

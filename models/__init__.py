@@ -1,3 +1,6 @@
+import logging
+import sys
+
 from sqlalchemy import create_engine, Column, Integer, String, Enum, ForeignKey, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
@@ -6,10 +9,22 @@ import os
 # Создаем базовый класс для моделей
 Base = declarative_base()
 
-# Путь к файлу базы данных SQLite
-db_path = os.path.join(os.path.dirname(__file__), 'database.db')
-engine = create_engine(f'sqlite:///{db_path}')
 
+def get_database_path():
+    # Если приложение собрано с помощью PyInstaller
+    if getattr(sys, 'frozen', False):
+        # Путь к базе данных в скомпилированном приложении
+        base_path = sys._MEIPASS
+    else:
+        # Путь для режима разработки
+        base_path = os.path.dirname(__file__)
+
+    return os.path.join(base_path, 'database.db')
+
+
+# Путь к файлу базы данных SQLite
+db_path = get_database_path()
+engine = create_engine(f'sqlite:///{db_path}')
 # Создаем сессию для работы с базой данных
 Session = sessionmaker(bind=engine)
 session = Session()

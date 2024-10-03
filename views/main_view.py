@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import threading
 import tkinter as tk
 from concurrent.futures import ThreadPoolExecutor
@@ -120,7 +121,6 @@ class MainView:
 
         # Загружаем эталонные изображения для выбранного типа телосложения
         reference_images = self.database.get_reference_images_by_body_type(body_type)
-
         if not reference_images:
             messagebox.showerror("Ошибка", "Нет эталонных изображений для выбранного типа телосложения.")
             return
