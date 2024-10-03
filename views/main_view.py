@@ -141,6 +141,22 @@ class MainView:
         if event.keysym == "space":
             self.save_and_upload_screenshot()
 
+        # Управление положением по X и Y
+        if event.keysym == "Up":  # Стрелка вверх
+            self.increase_y()
+        elif event.keysym == "Down":  # Стрелка вниз
+            self.decrease_y()
+        elif event.keysym == "Left":  # Стрелка влево
+            self.decrease_x()
+        elif event.keysym == "Right":  # Стрелка вправо
+            self.increase_x()
+
+        # Управление размером
+        if event.keysym == "plus" or event.keysym == "KP_Add":  # Клавиша "+" (на основной клавиатуре и на цифровой)
+            self.increase_size()
+        elif event.keysym == "minus" or event.keysym == "KP_Subtract":  # Клавиша "-" (на основной клавиатуре и на цифровой)
+            self.decrease_size()
+
     def update_description(self, description):
         # Если описание найдено, обновляем текст в description_label
         if description:
