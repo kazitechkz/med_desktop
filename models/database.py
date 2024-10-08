@@ -14,7 +14,8 @@ class Database:
             .filter(BodyType.name == body_type)
             .all()
         )
-        return [(image.position, image.image_path, image.description) for image in reference_images]
+        return [(image.position, image.image_path, image.description, image.additional_image_path) for image in
+                reference_images]
 
     def is_database_empty(self):
         """Проверяет, есть ли записи в таблице ReferenceImage."""

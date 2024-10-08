@@ -38,7 +38,6 @@ def add_frame_mask(img, mask_path, active_position, alpha_value=0.5, scale_facto
     return img_with_frame.convert("RGB")
 
 
-
 def add_privacy_mask_with_buttons(img, active_position, height=50, color=(0, 0, 0, 128)):
     """
     Добавляет полупрозрачную маску с кнопками в верхней части изображения.

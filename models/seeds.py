@@ -30,6 +30,7 @@ def seed_reference_images(session):
 
             # Добавляем описание для позиции PLAX
             if position == 'PLAX':
+                additional_image_path = f"assets/additional_images/{body_type.name.lower()}_{position.lower()}.jpg"
                 description = """
                 А – метка датчика, условно стоит всегда в центре поля сканирования и все координаты ведутся от нее.
                 В – место контакта синуса Вальсальвы аорты и межжелудочковой перегородки, т. н. аортально-септальный контакт,
@@ -46,12 +47,14 @@ def seed_reference_images(session):
                 """
             else:
                 description = None
+                additional_image_path = None
 
             reference_images.append(
                 ReferenceImage(
                     body_type_id=body_type.id,
                     position=position,
                     image_path=image_path,
+                    additional_image_path=additional_image_path,
                     description=description
                 )
             )

@@ -49,7 +49,8 @@ class ReferenceImage(Base):
     body_type_id = Column(Integer, ForeignKey('body_type.id'), nullable=False)
     position = Column(Enum('PLAX', 'PSAX', 'A4C', 'A2C', 'A3C', 'subcostal', 'suprasternal'), nullable=False)
     image_path = Column(String(255), nullable=False)
-    description = Column(Text, nullable=True)  # Добавляем поле для описания позиции
+    additional_image_path = Column(String(255), nullable=True)
+    description = Column(Text, nullable=True)
 
     body_type = relationship('BodyType', back_populates='reference_images')
 

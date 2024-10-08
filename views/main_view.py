@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from tkinter import messagebox
 from tkinter import ttk
 
-from PIL import ImageTk
+from PIL import Image, ImageTk
 
 from controllers.frame_controller import add_frame_mask
 from controllers.screen_controller import capture_screen
@@ -26,6 +26,8 @@ def get_body_type(text):
 
 class MainView:
     def __init__(self, root):
+        self.right_frame = None
+        # self.left_frame = None
         self.description_label = None
         self.root = root
         self.root.title("УЗИ с выбором каркаса и трансляцией")
@@ -86,20 +88,44 @@ class MainView:
         main_frame.pack(fill=tk.BOTH, expand=True)
 
         # Левая часть экрана - информационная карточка с фиксированной шириной
-        left_frame = tk.Frame(main_frame, width=300)  # Устанавливаем фиксированную ширину для левой части
-        left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
+        self.left_frame = tk.Frame(main_frame, width=300,
+                                   bg="lightgray")  # Устанавливаем фиксированную ширину для левой части
+        self.left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
         # Отключаем возможность изменения размера фрейма в зависимости от содержимого
-        left_frame.pack_propagate(False)
-        self.info_label = tk.Label(left_frame, text="Загрузка данных с сервера", font=("Arial", 14), justify=tk.LEFT,
-                                   anchor='w', wraplength=280)
+        self.left_frame.pack_propagate(False)
+
+        self.info_label = tk.Label(self.left_frame, text="Загрузка данных с сервера", font=("Arial", 14),
+                                   justify=tk.LEFT, anchor='w', wraplength=280)
         self.info_label.pack(pady=10)
 
-        # Добавляем лейбл для описания выбранной позиции
-        self.description_label = tk.Label(left_frame, text="", font=("Arial", 12), justify=tk.LEFT, anchor='w',
-                                          wraplength=280)
-        self.description_label.pack(pady=10)
+        # Лейбл для отображения дополнительного изображения
+        self.additional_image_label = tk.Label(self.left_frame)
+        self.additional_image_label.pack(pady=10)
 
-        self.preloader = ttk.Progressbar(left_frame, mode="indeterminate")
+        # Добавляем фрейм для текстового поля с описанием и скролла
+        self.text_frame = tk.Frame(self.left_frame)
+        self.text_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        # Добавляем скроллбар
+        self.text_scroll = tk.Scrollbar(self.text_frame)
+        self.text_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Текстовое поле для описания с прокруткой
+        self.description_text = tk.Text(self.text_frame, wrap=tk.WORD, yscrollcommand=self.text_scroll.set, height=5)
+        self.description_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        # Привязываем скроллбар к текстовому полю
+        self.text_scroll.config(command=self.description_text.yview)
+
+        # Изначально скрываем текстовое поле
+        self.text_frame.pack_forget()
+
+        # Кнопка для скрытия/показа текста
+        self.toggle_button = ttk.Button(self.left_frame, text="Показать описание", command=self.toggle_description,
+                                        takefocus=False)
+        self.toggle_button.pack(pady=5)
+
+        self.preloader = ttk.Progressbar(self.left_frame, mode="indeterminate")
         self.preloader.pack(pady=10)
         self.preloader.pack_forget()
 
@@ -194,7 +220,8 @@ class MainView:
         img_resized = img.resize((new_width, new_height))
 
         # Получаем текущую маску для позиции
-        current_position, mask_path, description = self.reference_images[self.current_position_index]
+        current_position, mask_path, description, additional_image_path = self.reference_images[
+            self.current_position_index]
 
         img_with_frame = add_frame_mask(img_resized, mask_path, self.current_position_index,
                                         scale_factor=self.scale_factor, pos_x=self.mask_position_x,
@@ -206,7 +233,38 @@ class MainView:
         self.label.image = img_tk
 
         # Обновляем описание для текущей позиции
-        self.update_description(description)
+        self.update_additional_image(additional_image_path)
+        self.current_description = description
+
+    def update_additional_image(self, additional_image_path):
+        """Загружает и отображает дополнительное изображение."""
+        if additional_image_path:
+            additional_img = Image.open(additional_image_path)
+            additional_img_resized = additional_img.resize((280, 500))  # Изменяем размер изображения
+            additional_img_tk = ImageTk.PhotoImage(additional_img_resized)
+            self.additional_image_label.config(image=additional_img_tk)
+            self.additional_image_label.image = additional_img_tk
+        else:
+            self.additional_image_label.config(image=None)
+            self.additional_image_label.image = None
+
+    def toggle_description(self):
+        """Скрывает или показывает текст описания."""
+        if self.text_frame.winfo_ismapped():  # Проверяем, отображается ли текст
+            self.text_frame.pack_forget()  # Скрываем текст
+            self.toggle_button.config(text="Показать описание")
+        else:
+            self.text_frame.pack(fill=tk.BOTH, expand=True)  # Показываем текст
+            self.toggle_button.config(text="Скрыть описание")
+            self.show_description()
+
+    def show_description(self):
+        """Обновляет текст в виджете Text."""
+        self.description_text.delete(1.0, tk.END)  # Очищаем текстовое поле
+        if self.current_description:
+            self.description_text.insert(tk.END, self.current_description)  # Вставляем новое описание
+        else:
+            self.description_text.insert(tk.END, "Описание недоступно.")
 
     def save_and_upload_screenshot(self):
         """Захват скриншота и отправка на сервер."""
