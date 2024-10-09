@@ -26,6 +26,7 @@ def get_body_type(text):
 
 class MainView:
     def __init__(self, root):
+        self.rotation_angle = 0
         self.right_frame = None
         # self.left_frame = None
         self.description_label = None
@@ -83,6 +84,11 @@ class MainView:
         tk.Label(control_frame, text="Размер:", width=10).pack(side=tk.LEFT, padx=5)
         tk.Button(control_frame, text="+", command=self.increase_size, width=2).pack(side=tk.LEFT, padx=2)
         tk.Button(control_frame, text="-", command=self.decrease_size, width=2).pack(side=tk.LEFT, padx=2)
+
+        # Кнопки для управления вращением
+        tk.Label(control_frame, text="Поворот:", width=10).pack(side=tk.LEFT, padx=5)
+        tk.Button(control_frame, text="⟲", command=self.rotate_left, width=2).pack(side=tk.LEFT, padx=2)
+        tk.Button(control_frame, text="⟳", command=self.rotate_right, width=2).pack(side=tk.LEFT, padx=2)
 
         main_frame = tk.Frame(self.root)
         main_frame.pack(fill=tk.BOTH, expand=True)
@@ -225,7 +231,7 @@ class MainView:
 
         img_with_frame = add_frame_mask(img_resized, mask_path, self.current_position_index,
                                         scale_factor=self.scale_factor, pos_x=self.mask_position_x,
-                                        pos_y=self.mask_position_y)
+                                        pos_y=self.mask_position_y, rotation_angle=self.rotation_angle)
 
         # Конвертируем изображение для отображения в tkinter
         img_tk = ImageTk.PhotoImage(img_with_frame)
@@ -312,4 +318,12 @@ class MainView:
 
     def decrease_size(self):
         self.scale_factor = max(0.1, self.scale_factor - 0.1)  # Уменьшаем масштаб, но не меньше 0.1
+        self.update_mask()
+
+    def rotate_left(self):
+        self.rotation_angle -= 1  # Вращаем влево на 10 градусов
+        self.update_mask()
+
+    def rotate_right(self):
+        self.rotation_angle += 1  # Вращаем вправо на 10 градусов
         self.update_mask()

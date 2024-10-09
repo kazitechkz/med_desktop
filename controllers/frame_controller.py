@@ -1,7 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 
 
-def add_frame_mask(img, mask_path, active_position, alpha_value=0.5, scale_factor=0.5, pos_x=0, pos_y=50):
+def add_frame_mask(img, mask_path, active_position, alpha_value=0.5, scale_factor=0.5, pos_x=0, pos_y=50, rotation_angle=0):
     """
     Накладывает маску и добавляет полосу с кнопками сверху, где активная позиция будет обёрнута зелёной рамкой.
     :param img: Исходное изображение
@@ -21,6 +21,9 @@ def add_frame_mask(img, mask_path, active_position, alpha_value=0.5, scale_facto
     new_width = int(mask_width * scale_factor)
     new_height = int(mask_height * scale_factor)
     mask_img = mask_img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+    # Поворот маски
+    mask_img = mask_img.rotate(rotation_angle, expand=True)
 
     # Изменяем прозрачность маски
     mask_img = reduce_transparency(mask_img, alpha_value)
