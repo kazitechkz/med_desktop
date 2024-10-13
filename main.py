@@ -1,16 +1,15 @@
-# This is a sample Python script.
+import tkinter as tk
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+from views.cap_view import CapView
+from models.database import Database  # Импортируем класс Database для инициализации
 
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
+# Запуск главного приложения
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    # Инициализация базы данных перед запуском приложения
+    db = Database()
+    db.initialize_database()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    # Запуск интерфейса
+    root = tk.Tk()
+    app = CapView(root)
+    root.mainloop()
