@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from views.cap_view import CapView
+from views.cap_devices_view import CapView
 from models.database import Database  # Импортируем класс Database для инициализации
 
 # Запуск главного приложения

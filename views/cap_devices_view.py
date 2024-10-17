@@ -36,7 +36,7 @@ class CapView:
         screen_height = self.root.winfo_screenheight()
         self.root.geometry(f"{screen_width}x{screen_height}")
         # Инициализируем пул потоков
-        self.executor = ThreadPoolExecutor(max_workers=2)
+        self.executor = ThreadPoolExecutor(max_workers=4)
         # Инициализируем параметры для управления положением и размером
         self.mask_position_x = 150  # Позиция по X
         self.mask_position_y = 50  # Позиция по Y
@@ -148,10 +148,12 @@ class CapView:
         """Заполняет список доступных устройств видеозахвата."""
         devices = []
         for index in range(10):
-            cap = cv2.VideoCapture(index)
-            if cap.isOpened():
+            self.cap = cv2.VideoCapture(index)
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+            if self.cap.isOpened():
                 devices.append(f"Device {index}")
-                cap.release()
+                self.cap.release()
         if devices:
             self.device_combobox['values'] = devices
             self.device_combobox.current(0)  # Устанавливаем первое устройство по умолчанию
@@ -191,7 +193,7 @@ class CapView:
             return
 
         self.is_streaming = True
-        self.update_video_frame()
+        self.executor.submit(self.update_video_frame)
 
     def find_video_device(self):
         for index in range(10):
@@ -209,16 +211,14 @@ class CapView:
         self.label.image = None
 
     def update_video_frame(self):
-        if not self.is_streaming:
-            return
-
-        ret, frame = self.cap.read()
-        if ret:
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            img = Image.fromarray(frame)
-            self.apply_mask_and_update(img)
-
-        self.root.after(50, self.update_video_frame)
+        while self.is_streaming:
+            ret, frame = self.cap.read()
+            if ret:
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                img = Image.fromarray(frame)
+                self.root.after(0, self.apply_mask_and_update, img)  # Передаем кадр в основной поток Tkinter
+            else:
+                break
 
     def on_key_press(self, event):
         if event.char.isdigit():  # Проверяем, что символ - цифра
