@@ -36,7 +36,7 @@ class CapView:
         screen_height = self.root.winfo_screenheight()
         self.root.geometry(f"{screen_width}x{screen_height}")
         # Инициализируем пул потоков
-        self.executor = ThreadPoolExecutor(max_workers=4)
+        self.executor = ThreadPoolExecutor(max_workers=6)
         # Инициализируем параметры для управления положением и размером
         self.mask_position_x = 150  # Позиция по X
         self.mask_position_y = 50  # Позиция по Y
@@ -45,7 +45,6 @@ class CapView:
         self.root.bind("<KeyPress>", self.on_key_press)
         # Отключаем возможность изменения размера
         self.root.resizable(False, False)
-
         self.is_streaming = False  # Флаг для контроля состояния трансляции
         self.build_ui()
 
@@ -63,6 +62,13 @@ class CapView:
 
         # Инициализируем список доступных устройств захвата
         self.scan_video_devices()
+        # Создаем Combobox для выбора разрешения
+        self.resolution_var = tk.StringVar(value="1920x1080")
+        # resolution_combobox = ttk.Combobox(
+        #     filter_frame, textvariable=self.resolution_var,
+        #     values=["640x480", "1280x720", "1920x1080"], state="readonly", width=15
+        # )
+        # resolution_combobox.pack(side=tk.LEFT, padx=10, pady=5)
         # Создаем Combobox для выбора типа телосложения
         self.body_type_var = tk.StringVar(value="астеник")
         body_type_combobox = ttk.Combobox(filter_frame, textvariable=self.body_type_var,
@@ -96,6 +102,10 @@ class CapView:
         tk.Label(control_frame, text="Поворот:", width=10).pack(side=tk.LEFT, padx=5)
         tk.Button(control_frame, text="⟲", command=self.rotate_left, width=2).pack(side=tk.LEFT, padx=2)
         tk.Button(control_frame, text="⟳", command=self.rotate_right, width=2).pack(side=tk.LEFT, padx=2)
+
+        # Кнопка для остановки трансляции
+        stop_button = ttk.Button(filter_frame, text="Стоп", command=self.stop_stream, takefocus=False)
+        stop_button.pack(side=tk.LEFT, padx=10, pady=5)
 
         main_frame = tk.Frame(self.root)
         main_frame.pack(fill=tk.BOTH, expand=True)
@@ -144,23 +154,44 @@ class CapView:
         self.label = tk.Label(self.right_frame)
         self.label.pack(fill=tk.BOTH, expand=True)
 
+        # Добавляем Progressbar (loader)
+        self.loader = ttk.Progressbar(control_frame, mode='indeterminate')
+        self.loader.pack(pady=10)
+
     def scan_video_devices(self):
         """Заполняет список доступных устройств видеозахвата."""
         devices = []
         for index in range(10):
-            self.cap = cv2.VideoCapture(index)
-            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-            if self.cap.isOpened():
+            cap = cv2.VideoCapture(index)
+            if cap.isOpened():
                 devices.append(f"Device {index}")
-                self.cap.release()
+                cap.release()
         if devices:
             self.device_combobox['values'] = devices
             self.device_combobox.current(0)  # Устанавливаем первое устройство по умолчанию
         else:
             messagebox.showerror("Ошибка", "Устройства видеозахвата не найдены.")
 
+    def set_resolution(self, cap, width, height):
+        """Настраивает разрешение устройства захвата."""
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+
+        # Проверяем, применилось ли разрешение
+        actual_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        actual_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        if actual_width != width or actual_height != height:
+            messagebox.showwarning("Предупреждение", f"Устройство не поддерживает разрешение {width}x{height}. "
+                                                     f"Используется {actual_width}x{actual_height}.")
+        return actual_width, actual_height
+
     def start_stream(self):
+        self.loader.start()
+        self.root.update()
+        # Запускаем инициализацию видеопотока в отдельном потоке
+        threading.Thread(target=self.initialize_stream).start()
+
+    def initialize_stream(self):
         if self.is_streaming:
             self.is_streaming = False
             self.root.after_cancel(self.stream_job)  # Остановка таймера при остановке стрима
@@ -187,12 +218,22 @@ class CapView:
 
         device_index = int(selected_device.split()[-1])  # Извлекаем индекс устройства
         self.cap = cv2.VideoCapture(device_index)
-
+        self.cap.set(cv2.CAP_PROP_FPS, 60)
         if not self.cap.isOpened():
             messagebox.showerror("Ошибка", "Не удалось открыть видеопоток.")
             return
 
+        # Получаем выбранное разрешение
+        selected_resolution = self.resolution_var.get()
+        width, height = map(int, selected_resolution.split('x'))
+
+        # Устанавливаем разрешение
+        actual_width, actual_height = self.set_resolution(self.cap, width, height)
+
         self.is_streaming = True
+        # Останавливаем и скрываем loader, когда видеопоток готов
+        self.loader.stop()
+        self.loader.pack_forget()
         self.executor.submit(self.update_video_frame)
 
     def find_video_device(self):
